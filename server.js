@@ -1,9 +1,11 @@
+
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
+var mongojs = require("mongojs")
 var logger = require("morgan");
 
-// var request = require("request");
+var request = require("request");
 var axios = require("axios");
 var cheerio = require("cheerio");
 
@@ -31,74 +33,71 @@ app.set("view engine", "handlebars");
 var routes = require("./controllers/html_controllers.js");
 app.use(routes);
 
-// Database configuration
-// var databaseUrl = "wsjDB";
-// var collections = ["articles"];
-
-// var db = mongojs(databaseUrl, collections);
-// db.on("Error", function (error) {
-//     console.log("Database error: ", error);
-// });
-
 Articles.create({ title: "Test Title" })
-    .then(function(dbArticles) {
+    .then(function (dbArticles) {
         console.log(dbArticles)
     })
-    .catch(function(err) {
+    .catch(function (err) {
         console.log(err.message);
     });
 
 app.get("/all", function (req, res) {
     Articles.find({})
-    .then(function(dbArticles) {
-        res.json(dbArticles);
-    })
-    .catch(function(err) {
-        res.json(err);
-    });
+        .then(function (dbArticles) {
+            res.json(dbArticles);
+        })
+        .catch(function (err) {
+            res.json(err);
+        });
 });
 
 app.get("/scrape", function (req, res) {
     axios.get("https://www.wsj.com/").then(function (response) {
         var $ = cheerio.load(response.data);
-
+        // var results = [];
+    
         $("a.wsj-headline-link").each(function (i, element) {
-            var result = {};
-            result.title = $(this)
-            .children("a")
-            .text();
+            var title = $(element).text();
+            var link = $(element).attr("href");
+            // results.push({ title: title, link: link })
+    
+            $("p.wsj-summary.dj-sg.wsj-card-feature").each(function (i, element) {
+                var teaser = $(element).children().text();
 
-            result.link = $(this)
-            .children("a")
-            .attr("href");
-
-            $("span.data-reactid").each(function (i, element) {
-
-                result.teaser = $(this)
-                .text();
-
-                    Articles.create(result)
-                    .then(function(dbArticles) {
-                        console.log(dbArticles);
-                    }).catch(function(err) {
-                        return res.json(err)
-                    });
-                });
+                if (title && link && teaser) {
+                    Articles.insert({
+                        title: title, 
+                        teaser: teaser, 
+                        link: link
+                    }, function (err, inserted) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            console.log(inserted);
+                        }
+                    })
+                }
+                // results.push({ title: title, teaser: teaser, link: link })
             })
-            res.send("Scrape Complete");
-        });
+        })
+        // console.log(results);
     });
+    res.send("Scrape Complete")
+})
+
+
 
 app.post("/articles/:id", function (req, res) {
-    Articles.findByIdAndUpdate({_id: req.params.id}, {$set: {comment:req.body.comment}}, {new: true}, function(err, comment) {
-        if (err) return handleError (err);
+    Articles.findByIdAndUpdate({ _id: req.params.id }, { $set: { comment: req.body.comment } }, { new: true }, function (err, comment) {
+        if (err) return handleError(err);
         res.send(comment);
     });
 });
 
 app.get("/articles/:id", function (req, res) {
-    Articles.findByIdAndDelete({_id: req.params.id}, {$unset: {comment: req.body.comment}}, function(err, comment) {
-        if(err) return handleError (err);
+    Articles.findByIdAndDelete({ _id: req.params.id }, { $unset: { comment: req.body.comment } }, function (err, comment) {
+        if (err) return handleError(err);
         res.send(comment)
     })
 })
