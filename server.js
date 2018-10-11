@@ -9,8 +9,9 @@ var request = require("request");
 var axios = require("axios");
 var cheerio = require("cheerio");
 
-var Articles = require("./models/Articles.js");
-var Comment = require("./models/Comment.js");
+var db = require("./models");
+// var Articles = require("./models/Articles.js");
+// var Comment = require("./models/Comment.js");
 
 var PORT = process.env.PORT || 3000;
 
@@ -33,7 +34,7 @@ app.set("view engine", "handlebars");
 var routes = require("./controllers/html_controllers.js");
 app.use(routes);
 
-Articles.create({ title: "Test Title" })
+db.Articles.create({ title: "Test Title" })
     .then(function (dbArticles) {
         console.log(dbArticles)
     })
@@ -42,7 +43,7 @@ Articles.create({ title: "Test Title" })
     });
 
 app.get("/all", function (req, res) {
-    Articles.find({})
+    db.Articles.find({})
         .then(function (dbArticles) {
             res.json(dbArticles);
         })
@@ -65,7 +66,7 @@ app.get("/scrape", function (req, res) {
                 var teaser = $(element).children().text();
 
                 if (title && link && teaser) {
-                    Articles.insert({
+                    db.Articles.insert({
                         title: title, 
                         teaser: teaser, 
                         link: link
@@ -88,17 +89,54 @@ app.get("/scrape", function (req, res) {
 
 
 
-app.post("/articles/:id", function (req, res) {
-    Articles.findByIdAndUpdate({ _id: req.params.id }, { $set: { comment: req.body.comment } }, { new: true }, function (err, comment) {
-        if (err) return handleError(err);
-        res.send(comment);
+// app.post("/articles/:id", function (req, res) {
+//     Articles.findByIdAndUpdate({ _id: req.params.id }, 
+//         { $set: { comment: req.body.comment } },
+//          function (error, edited) {
+//         if (error) {
+//             console.log(error);
+//             res.send(error)
+//         }
+//         else {
+//             console.log(edited);
+//             res.send(edited);
+//         }
+//     });
+// });
+app.get("/all/:id", function (req, res) {
+    db.Articles.findOne({ _id: req.params.id })
+    .populate("comment")
+    .then(function(dbArticles) {
+        res.json(dbArticles);
+    })
+    .catch(function(err) {
+        res.json(err);
     });
 });
 
-app.get("/articles/:id", function (req, res) {
-    Articles.findByIdAndDelete({ _id: req.params.id }, { $unset: { comment: req.body.comment } }, function (err, comment) {
-        if (err) return handleError(err);
-        res.send(comment)
+app.post("/all/:id", function(req, res) {
+    db.Comment.create(req.body)
+    .then(function(dbComment) {
+        return db.Articles.findOneAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
+    })
+    .then(function(dbArticles) {
+        res.json(dbArticles)
+    }).catch(function(err) {
+        res.json(err);
+    })
+})
+
+app.get("/delete/:id", function (req, res) {
+    db.Articles.findByIdAndRemove({ _id: req.params.id }, 
+        { $unset: { comment: req.body.comment } }, 
+        function (error, removed) {
+        if (error) {
+            console.log(error);
+        }
+        else {
+            console.log(removed);
+            res.send(removed);
+        }
     })
 })
 
