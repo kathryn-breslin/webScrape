@@ -1,0 +1,11 @@
+.jumbotron {
+    background-image: url(../images/sunrise-over-usa.png);
+    background-size: auto;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 400px;
+}
+
+.display-4, .lead {
+    color: white;
+}

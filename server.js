@@ -25,7 +25,7 @@ app.use(
 
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost/wsjDB");
+mongoose.connect("mongodb://localhost/wsj_DB", {useNewUrlParser: true });
 
 var exphbs = require("express-handlebars");
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
@@ -34,13 +34,13 @@ app.set("view engine", "handlebars");
 var routes = require("./controllers/html_controllers.js");
 app.use(routes);
 
-db.Articles.create({ title: "Test Title" })
-    .then(function (dbArticles) {
-        console.log(dbArticles)
-    })
-    .catch(function (err) {
-        console.log(err.message);
-    });
+// db.Articles.create({ title: "Test Title" })
+//     .then(function (dbArticles) {
+//         console.log(dbArticles)
+//     })
+//     .catch(function (err) {
+//         console.log(err.message);
+//     });
 
 app.get("/all", function (req, res) {
     db.Articles.find({})
@@ -66,7 +66,7 @@ app.get("/scrape", function (req, res) {
                 var teaser = $(element).children().text();
 
                 if (title && link && teaser) {
-                    db.Articles.insert({
+                    db.Articles.create({
                         title: title, 
                         teaser: teaser, 
                         link: link
@@ -87,8 +87,6 @@ app.get("/scrape", function (req, res) {
     res.send("Scrape Complete")
 })
 
-
-
 // app.post("/articles/:id", function (req, res) {
 //     Articles.findByIdAndUpdate({ _id: req.params.id }, 
 //         { $set: { comment: req.body.comment } },
@@ -103,9 +101,10 @@ app.get("/scrape", function (req, res) {
 //         }
 //     });
 // });
+
 app.get("/all/:id", function (req, res) {
-    db.Articles.findOne({ _id: req.params.id })
-    .populate("comment")
+    db.Articles.findById({ _id: req.params.id })
+    .populate("Comment")
     .then(function(dbArticles) {
         res.json(dbArticles);
     })
@@ -117,7 +116,7 @@ app.get("/all/:id", function (req, res) {
 app.post("/all/:id", function(req, res) {
     db.Comment.create(req.body)
     .then(function(dbComment) {
-        return db.Articles.findOneAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
+        return db.Articles.findByIdAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
     })
     .then(function(dbArticles) {
         res.json(dbArticles)

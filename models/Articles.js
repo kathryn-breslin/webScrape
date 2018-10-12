@@ -9,8 +9,7 @@ var ArticlesSchema = new Schema ({
         required: true
     }, 
     teaser: {
-        type: String, 
-        unique: true,
+        type: String,
     }, 
     link: {
         type: String, 
