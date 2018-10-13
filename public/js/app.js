@@ -14,9 +14,9 @@ $.getJSON("/all", function (data) {
         var newArticle= $('<div data-id="' + data[i]._id + '</div>');
         var newArticleHeader = $('<h5 class"mb-1">' + data[i].title + '</h5>');
         var newSummary = $('<p class="mb-1">' + data[i].teaser + '</p>');
-        var commentSection = $('<div class="form-group"><textarea class="form-control" id="commentSection" rows="3"></textarea></div>')
+        var commentSection = $(`<div class="form-group"><textarea class="form-control" id=${'commentSection' + data[i]._id} rows="3"></textarea></div>`)
         var newComment = $('<p class"mb-1" id="newComment" name="body"</p>');
-        var commentButton = $('<button id="comment" type="button" class="btn btn-primary btn-sm" value=' + data[i]._id + '>').html("Add Comment");
+        var commentButton = $('<button type="button" class="btn btn-primary btn-sm comment" value=' + data[i]._id + '>').html("Add Comment");
         var deleteButton = $('<button id="delete" type="button" class="btn btn-primary btn-sm" value=' + data[i]._id + '>').html("Delete Comment");
 
         var spacer = $('<br>');
@@ -36,16 +36,18 @@ $.getJSON("/all", function (data) {
 });
 
 
-$("#results").on("click", "#comment", function (event) {
+$("#results").on("click", ".comment", function (event) {
     event.preventDefault();
 
-    var thisId = $(this).attr("data-id");
+    var thisId = $(this).val();
+    var comment = $("#commentSection" + thisId).val();
 
+    console.log(comment);
     $.ajax({
        method: "POST",
        url: "/all/" + thisId,
        data: {
-           comment: $("#commentSection").val()
+           body: comment
         }
     }).then(function (data) {
         console.log(data);
@@ -57,7 +59,7 @@ $("#results").on("click", "#comment", function (event) {
         // newArticleDiv.append(newComment);
 
         // $("#results").prepend('<p id="newComment" class="data-entry" data-id="' + data._id + '"</p>');
-        $("#commentSection").val("");
+        $("#commentSection" + thisID).val("");
      })
 })
 
@@ -78,3 +80,4 @@ $("#results").on("click", "#clear", function (event) {
         $("#results").empty()
     })
 });
+

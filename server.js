@@ -103,8 +103,8 @@ app.get("/scrape", function (req, res) {
 // });
 
 app.get("/all/:id", function (req, res) {
-    db.Articles.findById({ _id: req.params.id })
-    .populate("Comment")
+    db.Articles.findOne({ _id: req.params.id })
+    .populate("comment")
     .then(function(dbArticles) {
         res.json(dbArticles);
     })
@@ -114,9 +114,10 @@ app.get("/all/:id", function (req, res) {
 });
 
 app.post("/all/:id", function(req, res) {
+    console.log(req.body);
     db.Comment.create(req.body)
     .then(function(dbComment) {
-        return db.Articles.findByIdAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
+        return db.Articles.findOneAndUpdate({ _id: req.params.id }, { comment: dbComment._id }, { new: true });
     })
     .then(function(dbArticles) {
         res.json(dbArticles)
