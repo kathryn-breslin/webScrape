@@ -25,7 +25,9 @@ app.use(
 
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost/wsj_DB", {useNewUrlParser: true });
+var MONGODB_URI =  process.env.MONGODB_URI || "mongodb://localhost/wsj_DB"
+// mongoose.connect("mongodb://localhost/wsj_DB", {useNewUrlParser: true });
+mongoose.connect(MONGODB_URI);
 
 var exphbs = require("express-handlebars");
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
