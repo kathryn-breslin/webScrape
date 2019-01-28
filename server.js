@@ -2,10 +2,10 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
-var mongojs = require("mongojs")
+// var mongojs = require("mongojs")
 var logger = require("morgan");
 
-var request = require("request");
+// var request = require("request");
 var axios = require("axios");
 var cheerio = require("cheerio");
 
@@ -25,9 +25,11 @@ app.use(
 
 app.use(express.static("public"));
 
-var MONGODB_URI =  process.env.MONGODB_URI || "mongodb://localhost/wsj_DB"
+var MONGODB_URI =  process.env.MONGODB_URI || "mongodb://localhost/wsj_DB";
 // mongoose.connect("mongodb://localhost/wsj_DB", {useNewUrlParser: true });
-mongoose.connect(MONGODB_URI);
+mongoose.connect(MONGODB_URI, {
+    useMongoClient: true
+});
 
 var exphbs = require("express-handlebars");
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
